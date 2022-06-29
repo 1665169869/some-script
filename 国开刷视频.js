@@ -10,15 +10,32 @@
 // ==/UserScript==
 
 let ns_player = $(".vjs-tech")[0];
+// 十秒后展开所有li
+setTimeout(() => {
+  ns_allclick();
+}, 10*1000);
 
 /**
  * 一秒监控一次播放
  **/
 setInterval(function () {
-  ns_player = $(".vjs-tech")[0];
-  ns_playover();
-  ns_start();
+  if(ns_player){
+    ns_player = $(".vjs-tech")[0];
+    ns_playover();
+    ns_start();
+  }
 }, 1000)
+
+/**
+ * 点击所有li
+ */
+function ns_allclick(){
+  let ali = $(".module-list>ul>li>div");
+  for (let index = 0; index < ali.length; index++) {
+    const element = ali[index];
+    $(element).click();
+  }
+}
 
 /**
  * 播放方法
@@ -43,7 +60,9 @@ function ns_start() {
  **/
 function ns_playover() {
   if (ns_player.duration === ns_player.currentTime) {
-    ns_playnext();
+    setTimeout(function(){
+      ns_playnext();
+    },2000);
   }
 }
 
@@ -51,23 +70,26 @@ function ns_playover() {
  * 播放下一个视频，如果有弹窗，那就播放当前视频
  **/
 function ns_playnext() {
-  let actlist = $(".activity-list>li");
-  let flag = false;
-  for (let i = 0; i < actlist.length; i++) {
-    if (flag) {
-      $(".activity-list>li:eq(" + i + ")>div").click();
-      let popup = $(".prerequisites-confirmation-popup");
-      for (let j = 0; j < popup.length; j++) {
-        if (popup[j].style.display === "block") {
-          $(".prerequisites-confirmation-popup:eq(" + j + ") .form-buttons>button").click();
-          ns_play();
-          break;
+    let actlist = $(".activity-list>li");
+    let flag = false;
+    for (let i = 0; i < actlist.length; i++) {
+      if (flag) {
+        if($($(".activity-list>li")[i]).parent().parent().find("> div > div > span").text()!="视频学习"){
+          continue;
         }
+        $(".activity-list>li:eq(" + i + ")>div").click();
+        let popup = $(".prerequisites-confirmation-popup");
+        for (let j = 0; j < popup.length; j++) {
+          if (popup[j].style.display === "block") {
+            $(".prerequisites-confirmation-popup:eq(" + j + ") .form-buttons>button").click();
+            ns_play();
+            break;
+          }
+        }
+        break;
       }
-      break;
+      if ($(actlist[i]).hasClass("active")) {
+        flag = true;
+      }
     }
-    if ($(actlist[i]).hasClass("active")) {
-      flag = true;
-    }
-  }
 }
