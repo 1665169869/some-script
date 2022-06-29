@@ -3,7 +3,7 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://lms.ouchn.cn/course/*
 // @grant       none
-// @version     1.4
+// @version     1.5
 // @author  Ybond
 // @license MIT
 // @description 自动刷视频，视频用16倍速静音播放，视频播放完毕自动播放专题下的下一个视频 如果下一个没解锁，自动播放当前视频
@@ -16,8 +16,8 @@ let ns_player = $(".vjs-tech")[0];
  **/
 setInterval(function () {
   ns_player = $(".vjs-tech")[0];
-  ns_start();
   ns_playover();
+  ns_start();
 }, 1000)
 
 /**
