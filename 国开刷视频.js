@@ -3,35 +3,42 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://lms.ouchn.cn/course/*
 // @grant       none
-// @version     1.7
+// @version     1.8
 // @author  Ybond
 // @license MIT
-// @description 自动刷视频、查看网页（可能重复刷，页面会来回跳转）。你没有用过的船新版本!是兄弟就来砍我
+// @description 自动刷视频、查看网页、自动点击链接，自动发表帖子(好好学习)，自动查看文件，（课程可能重复刷，页面会来回跳转）。你没有用过的船新版本!是兄弟就来砍我
 // ==/UserScript==
 let alllearning;
 let nolearning = [];
 let ns_player;
+let dbg = true;
 // 判断url是在课程首页
 if (/https:\/\/lms.ouchn.cn\/course\/\d+\/ng#\//m.test(document.URL)) {
+  nsd("当前在课程首页");
   // 判断全部展开按钮
   let cai = $(".expand-collapse-all-button>i");
   if (cai.hasClass("font-toggle-all-collapsed")) {
+    nsd("点击全部展开");
     cai.click();
   }
   // 加载所有课程
   setInterval(function () {
+    nsd("获取所有课程");
     ns_nostudy();
   }, 5000);
 } else if (/https:\/\/lms.ouchn.cn\/course\/\d+\/learning-activity\/full-screen#\/\d+/m.test(document.URL)) {
+  nsd("在详情页");
   // 处理详情
   setTimeout(function () {
     // 2秒监控一次
     setInterval(function () {
       ns_player = $(".vjs-tech")[0];
       if (ns_player) {
+        nsd("页面有视频")
         ns_playover();
         ns_start();
       } else {
+        nsd("页面没视频")
         ns_todown();
       }
     }, 5000);
@@ -55,8 +62,14 @@ function ns_nostudy() {
       typeEum = 1;
     } else if (type.indexOf("完成指标：需累积观看") > -1) {
       typeEum = 2;
+    } else if (type.indexOf("访问线上链接") > -1) {
+      typeEum = 3;
+    } else if (type.indexOf("完成指标：参与发帖或回帖") > -1) {
+      typeEum = 4;
+    } else if (type.indexOf("完成指标：观看或下载所有参考资料附件") > -1) {
+      typeEum = 5;
     }
-    if (zf === "未完成" && typeEum != -1) {
+    if (zf !== "已完成" && typeEum != -1) {
       $(".learning-activity:eq(" + i + ")>div").click();
       break;
       // nolearning.push({
@@ -68,6 +81,12 @@ function ns_nostudy() {
   }
 }
 
+function ns_back(nb) {
+  setTimeout(function () {
+    ns_pageback();
+  }, nb?nb:5000);
+}
+
 /** 视频操作 */
 
 // 十秒后展开所有li
@@ -75,15 +94,39 @@ function ns_nostudy() {
 //   ns_allclick();
 // }, 10 * 1000);
 
+var ns_pl = false;
+
 /**
  *滚屏到最下面
  */
 function ns_todown() {
-  $(".___content").scrollTop(999999);
-  $(document.getElementById("previewContentInIframe").contentWindow.document).scrollTop(999999);
-  setTimeout(function () {
-    ns_pageback();
-  }, 5000);
+  if ($(".open-link-button").html() && $(".open-link-button").html().indexOf("新页签打开") > -1) {
+    nsd("处理点击链接")
+    $(".open-link-button>i").click();
+    
+  ns_back();
+  } else if ($(".embeded-new-topic").html() && $(".embeded-new-topic").html().indexOf("发表帖子") > -1 && !ns_pl) {
+    nsd("处理发表帖子")
+    $(".embeded-new-topic>i").click();
+    $("#add-topic-popup > div > div.topic-form-section.main-area > form > div:nth-child(1) > div.field > input").val("好好学习").trigger('change');
+    setTimeout(function () {
+      $("#add-topic-popup > div > div.popup-footer > div > button.button.button-green.medium").click();
+      ns_pl = true;
+      
+  ns_back(10000);
+    }, 1000);
+  } else if ($("div.attachment-column.column.large-3 a:eq(0)")[0]) {
+    nsd("处理文件预览")
+    $("div.attachment-column.column.large-3 a:eq(0)").click();
+    
+  ns_back();
+  } else {
+    nsd("处理其他")
+    $(".___content").scrollTop(999999);
+    $(document.getElementById("previewContentInIframe").contentWindow.document).scrollTop(999999);
+    
+  ns_back();
+  }
 }
 
 /**
@@ -120,9 +163,7 @@ function ns_start() {
  */
 function ns_playover() {
   if (ns_player.duration === ns_player.currentTime) {
-    setTimeout(function () {
-      ns_pageback();
-    }, 5000);
+    ns_back();
   }
 }
 
@@ -151,5 +192,11 @@ function ns_playnext() {
     if ($(actlist[i]).hasClass("active")) {
       flag = true;
     }
+  }
+}
+
+function nsd(str) {
+  if (dbg) {
+    console.log(str);
   }
 }
