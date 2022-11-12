@@ -13,27 +13,6 @@ let nolearning = [];
 let ns_player;
 let dbg = true;
 
-document.onreadystatechange = function () {
-    if (document.readyState == 'complete') {
-        // 页面加载完毕
-        let myval = setInterval(function () {
-            let video = document.getElementsByTagName("video")[0];
-            if (video !== undefined) {
-                if (parseInt(video.duration) !== parseInt(video.currentTime) ||
-                    document.getElementsByClassName("mvp-time-display")[0].getElementsByTagName("span")[0].textContent
-                    !==
-                    document.getElementsByClassName("mvp-time-display")[0].getElementsByTagName("span")[1].textContent) {
-                    setTimeout(function () { document.getElementsByClassName("mvp-toggle-play mvp-first-btn-margin")[0].click() }, 3000);
-                }
-                video.onpause = function () {
-                    document.getElementsByClassName("mvp-toggle-play mvp-first-btn-margin")[0].click();
-                }
-                clearInterval(myval);
-            }
-        }, 2000);
-    }
-}
-
 // 判断url是在课程首页
 if (/https:\/\/lms.ouchn.cn\/course\/\d+\/ng#\//m.test(document.URL)) {
     nsd("当前在课程首页");
@@ -63,7 +42,7 @@ if (/https:\/\/lms.ouchn.cn\/course\/\d+\/ng#\//m.test(document.URL)) {
                 nsd("页面没视频")
                 ns_todown();
             }
-        }, 5000);
+        }, 2000);
     }, 15000);
 }
 
@@ -169,6 +148,9 @@ function ns_play() {
     ns_player.playbackRate = 1;
     ns_player.muted = true;
     $("div.mvp-replay-player-all-controls > div.mvp-controls-left-area > button > i").click();
+    document.getElementsByTagName("video")[0].onpause = function () {
+        document.getElementsByClassName("mvp-toggle-play mvp-first-btn-margin")[0].click();
+    }
 }
 
 /**
