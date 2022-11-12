@@ -58,7 +58,7 @@ if (/https:\/\/lms.ouchn.cn\/course\/\d+\/ng#\//m.test(document.URL)) {
             if (ns_player) {
                 nsd("页面有视频")
                 ns_playover();
-                // ns_start();
+                ns_start();
             } else {
                 nsd("页面没视频")
                 ns_todown();
