@@ -1,20 +1,14 @@
 // ==UserScript==
 // @name         国开自动播放下一集和解除切屏暂停视频限制
 // @namespace    http://index.xn--90wo2bk78a.love/
-// @version      1.1.2
+// @version      1.2.0
 // @description  国开自动播放下一集和解除切屏暂停视频限制 目前测试中
 // @author       白羽
 // @include      *://lms.ouchn.cn/course/*
 // ==/UserScript==
 
 
-/* 
-    目前已完成：
-        解除切屏自动暂停视频限制
-        自动检测是否播放完毕，if 播放完毕就调用next_video函数 else 继续自动播放
-    目前未完成：
-        next_video函数还没完成，由于国开是热加载专题课程，所以还得观察具体怎么做。
-*/
+const playbackRate = 1.5; // 视频倍数 建议最大2倍数，不然会卡。
 
 function getCookie(cname) {
     var name = cname + "=";
@@ -36,8 +30,9 @@ function gk_pageback(time) { // 返回课程列表
 function onVideo() {
     let myval = setInterval(function () { // 设置个定时任务 判断视频是否加载出来
         let video = document.getElementsByTagName("video")[0];
-        let audio = document.getElementsByTagName("audeo")[0];
+        let audio = document.getElementsByTagName("audio")[0];
         if (video !== undefined) {
+            video.playbackRate = playbackRate;
             if (parseInt(video.duration) === parseInt(video.currentTime) ||
                 document.getElementsByClassName("mvp-time-display")[0].getElementsByTagName("span")[0].textContent
                 ===
@@ -45,10 +40,12 @@ function onVideo() {
                 video.currentTime = 0; // 当进度满的时候重新播放该视频
             }
             setTimeout(function () { video.volume = 0; document.getElementsByClassName("mvp-toggle-play mvp-first-btn-margin")[0].click() }, 3000);
-            video.onpause = function () { // 当视频被暂停后执行回调函数
+            setInterval(() => {
                 video.volume = 0;
-                document.getElementsByClassName("mvp-toggle-play mvp-first-btn-margin")[0].click();
-            }
+                if (document.querySelector("i.mvp-fonts.mvp-fonts-play") !== undefined && document.querySelector("i.mvp-fonts.mvp-fonts-play") !== null) {
+                    document.querySelector("i.mvp-fonts.mvp-fonts-play").click();
+                }
+            }, 2000);
             video.onended = function () { // 当视频播放完成执行回调函数
                 gk_pageback();
             }
@@ -57,8 +54,22 @@ function onVideo() {
             if (parseInt(audio.duration) === parseInt(audio.currentTime) || document.querySelector("span.current.ng-binding").textContent === document.querySelector("div.duration span.ng-binding").textContent) {
                 audio.currentTime = 0;
             }
-            setTimeout(function () { audio.volume = 0; document.querySelector(".audio-player-wrapper > div > a").click() }, 3000);
-            audio.onpause
+            setTimeout(function () {
+                audio.volume = 0;
+                if (document.querySelector("i.font.font-audio-play") !== undefined) {
+                    document.querySelector("i.font.font-audio-play").click();
+                }
+            }, 3000);
+            setInterval(() => {
+                if (parseInt(audio.duration) === parseInt(audio.currentTime) || document.querySelector("span.current.ng-binding").textContent === document.querySelector("div.duration span.ng-binding").textContent) {
+                    gk_pageback()
+                } else {
+                    if (document.querySelector("i.font.font-audio-play") !== undefined) {
+                        document.querySelector("i.font.font-audio-play").click();
+                    }
+                }
+            }, 5000);
+            clearInterval(myval);
         }
     }, 2000);
 }
@@ -97,7 +108,7 @@ document.onreadystatechange = function () {
                     if (zf !== "已完成" && typeEum != -1) {
                         console.log("发现未完成的课程~");
                         document.cookie = "typeEum=" + typeEum;
-                        if (typeEum === 2 || typeEum === 4) {
+                        if (typeEum === 2 || typeEum === 4 || typeEum === 1) {
                             $(".learning-activity:eq(" + i + ")>div").click();
                             break;
                         }
@@ -123,7 +134,21 @@ document.onreadystatechange = function () {
                             clearInterval(timeId);
                         }
                     }, 4000);
-
+                    break;
+                case 1:
+                    gk_pageback(5000);
+                    break;
+                case 3:
+                    break;
+                case 5:
+                    // 没有思路，不做
+                    // timeId = setInterval(function () {
+                    //     let alllearning = document.querySelectorAll("a > i.font.font-table-edit-view");
+                    //     for (let i = 0; i < alllearning.length; i++) {
+                    //         alllearning[i].click();
+                            
+                    //     }
+                    // }, 2000);
                     break;
             }
         }
